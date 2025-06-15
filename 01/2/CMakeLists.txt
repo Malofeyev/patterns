@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(01)
+project(02)
 
 add_library(sql_builder sql_query_builder.cpp)
 
