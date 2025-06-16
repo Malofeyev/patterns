@@ -1,24 +1,26 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
+#include <memory>
 
 class Text {
 public:
     virtual void render(const std::string& data) const {
         std::cout << data;
     }
+    virtual ~Text() = default;
 };
 
 
 class DecoratedText : public Text {
 public:
-    explicit DecoratedText(Text* text) : text_(text) {}
-    Text* text_;
+    explicit DecoratedText(std::unique_ptr<Text> text) : text_(std::move(text)) {}
+    std::unique_ptr<Text> text_;
 };
 
 class ItalicText : public DecoratedText {
 public:
-    explicit ItalicText(Text* text) : DecoratedText(text) {}
+    explicit ItalicText(std::unique_ptr<Text> text) : DecoratedText(std::move(text)) {}
     void render(const std::string& data)  const  {
         std::cout << "<i>";
         text_->render(data);
@@ -28,7 +30,7 @@ public:
 
 class BoldText : public DecoratedText {
 public:
-    explicit BoldText(Text* text) : DecoratedText(text) {}
+    explicit BoldText(std::unique_ptr<Text> text) : DecoratedText(std::move(text)) {}
     void render(const std::string& data) const {
         std::cout << "<b>";
         text_->render(data);
@@ -38,7 +40,7 @@ public:
 
 class Paragraph : public DecoratedText {
 public: 
-    explicit Paragraph(Text* text) : DecoratedText(text) {}
+    explicit Paragraph(std::unique_ptr<Text> text) : DecoratedText(std::move(text)) {}
     void render(const std::string& data) const {
         std::cout << "<p>";
         text_->render(data);
@@ -48,7 +50,7 @@ public:
 
 class Reversed : public DecoratedText {
 public:
-    explicit Reversed(Text* text) : DecoratedText(text) {}
+    explicit Reversed(std::unique_ptr<Text> text) : DecoratedText(std::move(text)) {}
     void render(const std::string& data) const {
         auto reversed = data;
         std::reverse(reversed.begin(), reversed.end());
@@ -58,7 +60,7 @@ public:
 
 class Link : private DecoratedText {
 public:
-    explicit Link(Text* text) : DecoratedText(text) {}
+    explicit Link(std::unique_ptr<Text> text) : DecoratedText(std::move(text)) {}
     void render(const std::string& reference, const std::string& data) const {
         std::cout << "<a href=" << reference << ">";
         text_->render(data);
@@ -68,22 +70,22 @@ public:
 
 int main() {
     {
-        auto text_block = new ItalicText(new BoldText(new Text()));
+        auto text_block = std::make_unique<ItalicText>(std::make_unique<BoldText>(std::make_unique<Text>()));
         text_block->render("Hello world");
         std::cout << std::endl;
     }
     {
-        auto text_block = new Paragraph(new Text());
+        auto text_block = std::make_unique<Paragraph>(std::make_unique<Text>());
         text_block->render("Hello world");
         std::cout << std::endl;
     }
     {
-        auto text_block = new Reversed(new Text());
+        auto text_block = std::make_unique<Reversed>(std::make_unique<Text>());
         text_block->render("Hello world");
         std::cout << std::endl;
     }
     {
-        auto text_block = new Link(new Text());
+        auto text_block = std::make_unique<Link>(std::make_unique<Text>());
         text_block->render("netology.ru", "Hello world");
         std::cout << std::endl;
     }
